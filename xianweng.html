@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>古琴谱渲染器 - 仙翁操</title>
+    <style>
+        /* 引入楷体，增加古风感 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700&display=swap');
+
+        body {
+            font-family: 'Noto Serif SC', "KaiTi", "楷体", serif;
+            background-color: #f4f1ea; /* 米黄色宣纸背景 */
+            padding: 40px;
+            text-align: center;
+        }
+
+        h1 { margin-bottom: 40px; color: #333; }
+
+        /* 乐谱容器：弹性布局，自动换行 */
+        #score-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start; /* 从左到右 */
+            max-width: 900px;
+            margin: 0 auto;
+            gap: 15px; /* 音符间距 */
+            padding: 20px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+
+        /* 单个音符单元 */
+        .guqin-note {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 60px;
+        }
+
+        /* 顶部：简谱和歌词 */
+        .meta-info {
+            height: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .jianpu { font-size: 16px; font-weight: bold; color: #444; }
+        .lyric { font-size: 14px; color: #888; margin-top: 2px;}
+
+        /* --- 核心：减字谱方块 --- */
+        .guqin-char {
+            width: 50px;
+            height: 60px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            /* 边框用于调试，正式版可去掉或改淡 */
+            /* border: 1px dashed #ccc; */ 
+        }
+
+        /* 散音布局：顶部居中 */
+        .char-top {
+            flex: 0.8;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            font-size: 20px;
+            line-height: 1;
+            z-index: 2;
+        }
+
+        /* 散音布局：底部层叠 */
+        .char-bottom {
+            flex: 1.2;
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
+        .wrapper {
+            font-size: 34px; /* 动作符号大一点 */
+            line-height: 0.8;
+            font-weight: normal;
+        }
+
+        .inner {
+            position: absolute;
+            top: 7px; /* 关键：把数字塞进动作符号的怀里 */
+            font-size: 13px;
+            font-weight: bold;
+        }
+        
+        /* 小节线样式 */
+        .bar-line {
+            width: 2px;
+            height: 100px;
+            background-color: #aaa;
+            margin: 0 15px;
+            align-self: center;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>仙翁操 (散音生成演示)</h1>
+    <div id="score-container"></div>
+
+    <script>
+        // --- 模拟后端传来的数据 (Output JSON) ---
+        const outputData = {
+          "song_info": { "title": "仙翁操", "tuning": "standard_tuning" },
+          "render_queue": [
+            // 第一小节：6(低) 3
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "6̣", "lyric": "仙" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "二" } },
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "3", "lyric": "翁" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "五" } },
+            { "type": "bar_line" },
+            
+            // 第二小节：6(低) 6(低)
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "6̣", "lyric": "仙" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "二" } },
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "6̣", "lyric": "翁" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "二" } },
+            { "type": "bar_line" },
+
+            // 第三小节：6(低) 3 5 5
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "6̣", "lyric": "得" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "二" } },
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "3", "lyric": "道" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "五" } },
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "5", "lyric": "仙" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "六" } },
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "5", "lyric": "翁" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "六" } },
+            { "type": "bar_line" },
+
+            // 第四小节：6(低) 6(低)
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "6̣", "lyric": "得" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "二" } },
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "6̣", "lyric": "道" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "二" } },
+            { "type": "bar_line" },
+
+            // 第五小节 (第二行)：5 2 3 3
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "5", "lyric": "陈" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "六" } },
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "2", "lyric": "抟" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "四" } },
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "3", "lyric": "仙" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "五" } },
+            { "type": "guqin_char", "layout_mode": "open_string", "display_info": { "jianpu": "3", "lyric": "翁" }, "components": { "top": "艹", "bottom_wrapper": "乚", "bottom_inner": "五" } }
+          ]
+        };
+
+        // --- 渲染引擎 ---
+        const container = document.getElementById('score-container');
+
+        outputData.render_queue.forEach(item => {
+            if (item.type === 'bar_line') {
+                const line = document.createElement('div');
+                line.className = 'bar-line';
+                container.appendChild(line);
+                return;
+            }
+
+            if (item.type === 'guqin_char') {
+                const noteDiv = document.createElement('div');
+                noteDiv.className = 'guqin-note';
+
+                // 1. 构建 Meta (简谱+歌词)
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'meta-info';
+                metaDiv.innerHTML = `
+                    <span class="jianpu">${item.display_info.jianpu}</span>
+                    <span class="lyric">${item.display_info.lyric}</span>
+                `;
+                noteDiv.appendChild(metaDiv);
+
+                // 2. 构建减字谱方块
+                const charDiv = document.createElement('div');
+                charDiv.className = 'guqin-char';
+
+                // 根据 layout_mode 决定如何渲染
+                if (item.layout_mode === 'open_string') {
+                    // 上部分：草字头
+                    const topDiv = document.createElement('div');
+                    topDiv.className = 'char-top';
+                    topDiv.innerText = item.components.top;
+                    
+                    // 下部分：动作+弦号
+                    const bottomDiv = document.createElement('div');
+                    bottomDiv.className = 'char-bottom';
+                    
+                    const wrapper = document.createElement('span');
+                    wrapper.className = 'wrapper';
+                    wrapper.innerText = item.components.bottom_wrapper;
+
+                    const inner = document.createElement('span');
+                    inner.className = 'inner';
+                    inner.innerText = item.components.bottom_inner;
+
+                    bottomDiv.appendChild(wrapper);
+                    bottomDiv.appendChild(inner);
+
+                    charDiv.appendChild(topDiv);
+                    charDiv.appendChild(bottomDiv);
+                }
+                
+                noteDiv.appendChild(charDiv);
+                container.appendChild(noteDiv);
+            }
+        });
+    </script>
+</body>
+</html>

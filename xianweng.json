@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "title": "仙翁操",
+    "bpm": 60,
+    "time_signature": "4/4"
+  },
+  "events": [
+    {"type": "note", "id": "n1", "pitch": 6, "octave": -1, "lyric": "仙"},
+    {"type": "note", "id": "n2", "pitch": 3, "octave": 0, "lyric": "翁"},
+    {"type": "bar_line"},
+    {"type": "note", "id": "n3", "pitch": 6, "octave": -1, "lyric": "仙"},
+    {"type": "note", "id": "n4", "pitch": 6, "octave": -1, "lyric": "翁"},
+    {"type": "bar_line"},
+    {"type": "note", "id": "n5", "pitch": 6, "octave": -1, "lyric": "得"},
+    {"type": "note", "id": "n6", "pitch": 3, "octave": 0, "lyric": "道"},
+    {"type": "note", "id": "n7", "pitch": 5, "octave": 0, "lyric": "仙"},
+    {"type": "note", "id": "n8", "pitch": 5, "octave": 0, "lyric": "翁"},
+    {"type": "bar_line"},
+    {"type": "note", "id": "n9", "pitch": 6, "octave": -1, "lyric": "得"},
+    {"type": "note", "id": "n10", "pitch": 6, "octave": -1, "lyric": "道"},
+    {"type": "bar_line"},
+    {"type": "note", "id": "n11", "pitch": 5, "octave": 0, "lyric": "陈"},
+    {"type": "note", "id": "n12", "pitch": 2, "octave": 0, "lyric": "抟"},
+    {"type": "note", "id": "n13", "pitch": 3, "octave": 0, "lyric": "仙"},
+    {"type": "note", "id": "n14", "pitch": 3, "octave": 0, "lyric": "翁"}
+  ]
+}
