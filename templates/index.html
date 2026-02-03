@@ -3,250 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>简谱转古琴谱 (仙翁操版)</title>
-    <!-- 引入中文字体 -->
+    <title>MusicXML 转 古琴谱</title>
     <style>
+        /* 复用之前的完美 CSS */
         @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700&display=swap');
+        :root { --paper-color: #f4f1ea; --ink-color: #2b2b2b; }
+        body { font-family: 'Noto Serif SC', "KaiTi", "楷体", serif; background-color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        .control-panel { background: white; padding: 20px; border-radius: 8px; width: 100%; max-width: 900px; margin-bottom: 20px; display: flex; gap: 20px; }
+        textarea { flex: 1; height: 150px; padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-family: monospace; font-size: 12px;}
+        .buttons { display: flex; flex-direction: column; gap: 10px; justify-content: center;}
+        button { padding: 10px 20px; background: #8b4513; color: white; border: none; cursor: pointer; border-radius: 4px; font-weight: bold;}
+        button:hover { background: #a0522d; }
 
-        :root {
-            --paper-color: #f4f1ea;
-            --ink-color: #2c2c2c;
-        }
+        #score-paper { background-color: var(--paper-color); width: 100%; max-width: 900px; min-height: 500px; padding: 50px; box-shadow: 0 0 20px rgba(0,0,0,0.5); display: flex; flex-wrap: wrap; align-content: flex-start; gap: 5px; }
+        h2.title { width: 100%; text-align: center; margin-bottom: 40px; font-size: 36px; color: var(--ink-color); letter-spacing: 5px; }
 
-        body {
-            font-family: 'Noto Serif SC', "KaiTi", "楷体", serif;
-            background-color: #e8e8e8;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        .guqin-note { display: flex; flex-direction: column; align-items: center; width: 55px; margin-bottom: 20px; }
+        .meta-info { height: 40px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; margin-bottom: 4px; }
+        .jianpu { font-size: 16px; font-weight: 900; color: #555; }
+        .lyric { font-size: 14px; color: #888; margin-top: 2px; }
 
-        /* --- 控制面板区域 --- */
-        .control-panel {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 900px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 20px;
-        }
-
-        textarea {
-            flex: 1;
-            height: 150px;
-            padding: 10px;
-            font-family: monospace;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            resize: vertical;
-        }
-
-        .buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        button {
-            padding: 10px 20px;
-            background-color: #333;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: sans-serif;
-            font-weight: bold;
-        }
-        button:hover { background-color: #555; }
-        button.secondary { background-color: #888; }
-
-        /* --- 乐谱渲染区域 --- */
-        #score-paper {
-            background-color: var(--paper-color);
-            width: 100%;
-            max-width: 900px;
-            min-height: 400px;
-            padding: 40px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            border-radius: 5px;
-            display: flex;
-            flex-wrap: wrap;
-            align-content: flex-start;
-            gap: 10px;
-        }
-
-        h2.title {
-            width: 100%;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 32px;
-            color: var(--ink-color);
-        }
-
-        /* --- 古琴谱组件样式 --- */
-        .guqin-note {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 5px;
-        }
-
-        .meta-info {
-            height: 35px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            margin-bottom: 2px;
-        }
-        .jianpu { font-size: 16px; font-weight: bold; color: #555; }
-        .lyric { font-size: 14px; color: #888; }
-
-        .guqin-char {
-            width: 50px;
-            height: 60px;
-            display: flex;
-            flex-direction: column;
-            color: var(--ink-color);
-            /* border: 1px solid #eee;  调试用 */
-        }
-
-        .char-top {
-            flex: 0.8;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            font-size: 20px;
-            line-height: 1;
-        }
-
-        .char-bottom {
-            flex: 1.2;
-            position: relative;
-            display: flex;
-            justify-content: center;
-        }
-
-        .wrapper {
-            font-size: 36px; 
-            line-height: 0.8;
-            font-weight: normal; 
-        }
-
-        .inner {
-            position: absolute;
-            top: 8px; 
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .bar-line {
-            width: 2px;
-            height: 80px;
-            background-color: #999;
-            margin: 0 15px;
-            align-self: center;
-        }
-
+        .guqin-char { width: 50px; height: 55px; position: relative; display: flex; flex-direction: column; align-items: center; color: var(--ink-color); }
+        .char-top { font-size: 26px; line-height: 1; height: 14px; transform: scale(1.4, 0.65); margin-bottom: -4px; z-index: 10; }
+        .char-bottom { position: relative; width: 100%; height: 40px; display: flex; justify-content: center; }
+        .wrapper { font-size: 40px; line-height: 1; font-weight: normal; transform: scale(1, 0.95); }
+        .inner { position: absolute; font-size: 13px; font-weight: 900; }
+        
+        .layout-tiao .inner { top: 6px; left: 20px; }
+        .layout-tiao .wrapper { margin-left: -8px; }
+        .layout-gou .inner { top: 14px; left: 50%; transform: translateX(-50%); }
+        .layout-gou .wrapper { margin-top: -2px; }
+        
+        .bar-line { width: 1px; height: 100px; background-color: #999; margin: 0 15px; align-self: center; }
     </style>
 </head>
 <body>
 
     <div class="control-panel">
-        <textarea id="inputJson" placeholder="在此输入简谱JSON..."></textarea>
+        <textarea id="inputData" placeholder="在此粘贴 MusicXML 内容..."></textarea>
         <div class="buttons">
-            <button onclick="loadDefault()">载入《仙翁操》数据</button>
+            <button onclick="loadDefault()">载入测试文件 (Test1.md)</button>
             <button onclick="generate()">生成古琴谱</button>
         </div>
     </div>
 
     <div id="score-paper">
         <h2 class="title" id="songTitle">古琴谱</h2>
-        <div id="render-area" style="display: flex; flex-wrap: wrap; width: 100%;">
-            <!-- 渲染结果将在这里显示 -->
-        </div>
+        <div id="render-area" style="display: flex; flex-wrap: wrap; width: 100%;"></div>
     </div>
 
     <script>
-        // 默认数据：仙翁操
-        const XIAN_WENG_CAO = {
-            "meta": { "title": "仙翁操", "bpm": 60 },
-            "events": [
-                {"type": "note", "pitch": 6, "octave": -1, "lyric": "仙"},
-                {"type": "note", "pitch": 3, "octave": 0, "lyric": "翁"},
-                {"type": "bar_line"},
-                {"type": "note", "pitch": 6, "octave": -1, "lyric": "仙"},
-                {"type": "note", "pitch": 6, "octave": -1, "lyric": "翁"},
-                {"type": "bar_line"},
-                {"type": "note", "pitch": 6, "octave": -1, "lyric": "得"},
-                {"type": "note", "pitch": 3, "octave": 0, "lyric": "道"},
-                {"type": "note", "pitch": 5, "octave": 0, "lyric": "仙"},
-                {"type": "note", "pitch": 5, "octave": 0, "lyric": "翁"},
-                {"type": "bar_line"},
-                {"type": "note", "pitch": 6, "octave": -1, "lyric": "得"},
-                {"type": "note", "pitch": 6, "octave": -1, "lyric": "道"},
-                {"type": "bar_line"},
-                {"type": "note", "pitch": 5, "octave": 0, "lyric": "陈"},
-                {"type": "note", "pitch": 2, "octave": 0, "lyric": "抟"},
-                {"type": "note", "pitch": 3, "octave": 0, "lyric": "仙"},
-                {"type": "note", "pitch": 3, "octave": 0, "lyric": "翁"}
-            ]
-        };
+        // 你提供的 Test1.md 的内容 (MusicXML)
+        const DEFAULT_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
+  <work><work-title>Prev_258.0</work-title></work>
+  <part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>
+  <part id="P1">
+    <measure number="1"><note><rest measure="yes"/><duration>8</duration><staff>2</staff></note><backup><duration>8</duration></backup><note><pitch><step>B</step><alter>0</alter><octave>4</octave></pitch><duration>8</duration><type>eighth</type><stem>down</stem><staff>1</staff><voice>1</voice></note></measure>
+    <measure number="2"><note><pitch><step>G</step><alter>0</alter><octave>5</octave></pitch><duration>24</duration><type>quarter</type><dot/><stem>down</stem><staff>1</staff><voice>1</voice></note><backup><duration>24</duration></backup><note><pitch><step>E</step><alter>0</alter><octave>2</octave></pitch><duration>8</duration><staff>2</staff></note><note><pitch><step>G</step><alter>0</alter><octave>3</octave></pitch><duration>8</duration><staff>2</staff></note><note><chord/><pitch><step>E</step><alter>0</alter><octave>4</octave></pitch><duration>8</duration><staff>2</staff></note><note><pitch><step>B</step><alter>0</alter><octave>3</octave></pitch><duration>8</duration><staff>2</staff></note><note><chord/><pitch><step>G</step><alter>0</alter><octave>4</octave></pitch><duration>8</duration><staff>2</staff></note><note><chord/><pitch><step>E</step><alter>0</alter><octave>4</octave></pitch><duration>8</duration><staff>2</staff></note><note><pitch><step>E</step><alter>0</alter><octave>3</octave></pitch><duration>8</duration><staff>2</staff></note><backup><duration>8</duration></backup><note><pitch><step>G</step><alter>0</alter><octave>5</octave></pitch><duration>8</duration><staff>1</staff></note><note><pitch><step>F</step><alter>0</alter><octave>5</octave></pitch><duration>8</duration><staff>1</staff></note><backup><duration>8</duration></backup><note><pitch><step>A</step><alter>0</alter><octave>3</octave></pitch><duration>8</duration><staff>2</staff></note><note><chord/><pitch><step>D</step><alter>0</alter><octave>4</octave></pitch><duration>8</duration><staff>2</staff></note><note><pitch><step>A</step><alter>0</alter><octave>4</octave></pitch><duration>8</duration><staff>2</staff></note><note><chord/><pitch><step>C</step><alter>0</alter><octave>4</octave></pitch><duration>8</duration><staff>2</staff></note><note><chord/><pitch><step>D</step><alter>0</alter><octave>4</octave></pitch><duration>8</duration><staff>2</staff></note><backup><duration>8</duration></backup><note><pitch><step>G</step><alter>0</alter><octave>5</octave></pitch><duration>8</duration><staff>1</staff></note><note><pitch><step>E</step><alter>0</alter><octave>2</octave></pitch><duration>8</duration><staff>2</staff></note><backup><duration>8</duration></backup><note><pitch><step>F</step><alter>0</alter><octave>5</octave></pitch><duration>24</duration><staff>1</staff></note><backup><duration>16</duration></backup><note><pitch><step>G</step><alter>0</alter><octave>3</octave></pitch><duration>16</duration><staff>2</staff></note><note><chord/><pitch><step>E</step><alter>0</alter><octave>4</octave></pitch><duration>16</duration><staff>2</staff></note><note><pitch><step>B</step><alter>0</alter><octave>3</octave></pitch><duration>16</duration><staff>2</staff></note><note><chord/><pitch><step>E</step><alter>0</alter><octave>4</octave></pitch><duration>16</duration><staff>2</staff></note><note><chord/><pitch><step>G</step><alter>0</alter><octave>4</octave></pitch><duration>16</duration><staff>2</staff></note><backup><duration>16</duration></backup><note><rest measure="yes"/><duration>16</duration><staff>1</staff></note><note><pitch><step>E</step><alter>0</alter><octave>5</octave></pitch><duration>16</duration><staff>1</staff></note><backup><duration>16</duration></backup><note><pitch><step>D</step><alter>0</alter><octave>2</octave></pitch><duration>8</duration><staff>2</staff></note><note><pitch><step>G</step><alter>0</alter><octave>3</octave></pitch><duration>16</duration><staff>2</staff></note><note><chord/><pitch><step>E</step><alter>0</alter><octave>4</octave></pitch><duration>16</duration><staff>2</staff></note><backup><duration>16</duration></backup><note><rest measure="yes"/><duration>8</duration><staff>1</staff></note><note><pitch><step>B</step><alter>0</alter><octave>3</octave></pitch><duration>16</duration><staff>2</staff></note><note><chord/><pitch><step>G</step><alter>0</alter><octave>4</octave></pitch><duration>16</duration><staff>2</staff></note><note><chord/><pitch><step>E</step><alter>0</alter><octave>4</octave></pitch><duration>16</duration><staff>2</staff></note><backup><duration>16</duration></backup><note><pitch><step>B</step><alter>0</alter><octave>4</octave></pitch><duration>8</duration><staff>1</staff></note></measure>
+    <!-- 为了演示简洁，这里只截取了前两小节，实际你可以粘贴完整的 -->
+  </part>
+</score-partwise>`;
 
-        // 页面加载时自动填入默认值
-        window.onload = function() {
-            loadDefault();
-        }
+        window.onload = loadDefault;
 
         function loadDefault() {
-            document.getElementById('inputJson').value = JSON.stringify(XIAN_WENG_CAO, null, 2);
+            document.getElementById('inputData').value = DEFAULT_XML;
         }
 
         async function generate() {
-            const inputVal = document.getElementById('inputJson').value;
-            let inputJson;
-            try {
-                inputJson = JSON.parse(inputVal);
-            } catch (e) {
-                alert("JSON 格式错误，请检查输入");
-                return;
-            }
+            const inputVal = document.getElementById('inputData').value;
+            if (!inputVal) { alert("内容为空"); return; }
 
-            // 发送给后端 API
             try {
+                // 直接发送字符串给后端，让后端去判断是 XML 还是 JSON
                 const response = await fetch('/api/convert', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(inputJson)
+                    headers: { 'Content-Type': 'application/xml' }, // 标记为 XML 或 text
+                    body: inputVal
                 });
-
                 const data = await response.json();
                 renderScore(data);
-
             } catch (err) {
                 console.error(err);
-                alert("生成失败，请检查后端是否启动");
+                alert("生成失败，请检查后端报错");
             }
         }
 
         function renderScore(data) {
             const container = document.getElementById('render-area');
             const title = document.getElementById('songTitle');
-            
-            // 清空旧内容
             container.innerHTML = '';
-            
-            // 设置标题
-            if(data.song_info && data.song_info.title) {
-                title.innerText = data.song_info.title;
-            }
+            if(data.song_info?.title) title.innerText = data.song_info.title;
 
-            // 遍历渲染队列
             data.render_queue.forEach(item => {
                 if (item.type === 'bar_line') {
                     const line = document.createElement('div');
@@ -256,7 +107,17 @@
                 }
 
                 if (item.type === 'guqin_char' && item.layout_mode === 'open_string') {
-                    // 创建 HTML 结构
+                    let layoutClass = '';
+                    const wrapper = item.components.bottom_wrapper;
+                    
+                    if (wrapper === '乚') layoutClass = 'layout-tiao';
+                    else if (wrapper === '勹') layoutClass = 'layout-gou';
+
+                    // 如果是空字符（MusicXML里找不到散音的情况），我们可以渲染一个占位符或者只显示简谱
+                    const topChar = item.components.top || "";
+                    const innerChar = item.components.bottom_inner || "";
+                    const wrapperChar = item.components.bottom_wrapper || "";
+
                     const noteHtml = `
                         <div class="guqin-note">
                             <div class="meta-info">
@@ -264,15 +125,14 @@
                                 <span class="lyric">${item.display_info.lyric}</span>
                             </div>
                             <div class="guqin-char">
-                                <div class="char-top">${item.components.top}</div>
-                                <div class="char-bottom">
-                                    <span class="wrapper">${item.components.bottom_wrapper}</span>
-                                    <span class="inner">${item.components.bottom_inner}</span>
+                                <div class="char-top">${topChar}</div>
+                                <div class="char-bottom ${layoutClass}">
+                                    <span class="wrapper">${wrapperChar}</span>
+                                    <span class="inner">${innerChar}</span>
                                 </div>
                             </div>
                         </div>
                     `;
-                    // 将字符串转为 DOM 元素并追加
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = noteHtml;
                     container.appendChild(tempDiv.firstElementChild);
