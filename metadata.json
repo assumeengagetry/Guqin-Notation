@@ -1,0 +1,5 @@
+{
+  "name": "Guqinize - MusicXML to Jianzipu",
+  "description": "Converts standard MusicXML scores into Traditional Chinese Guqin (Jianzipu) notation.",
+  "requestFramePermissions": []
+}
